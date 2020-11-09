@@ -1,0 +1,48 @@
+<h1>Manage Followers</h1>
+
+<h2>Followers</h2>
+{% if all_followers %}
+	<ol>
+	{% for follower in all_followers %}
+		<li><a href="/ideation/user/{{ follower.username }}">{{ follower.username }}</a></li>
+		<form action="/ideation/user/{{ follower.follows }}/remove/{{ follower.username }}/" method="get">
+		{% csrf_token %} 
+		<input type="submit" value="Remove"></form>
+		<br>
+	{% endfor %}
+	</ol>
+{% else %}
+	<p>No followers! Make some friends</p>
+{% endif %}
+<br><br>
+<h2>Following</h2>
+{% if all_follows %}
+	<ol>
+	{% for follow in all_follows %}
+		<li><a href="/ideation/user/{{ follow.follows }}">{{ follow.follows }}</a></li>
+		<br>
+	{% endfor %}
+	</ol>
+{% else %}
+	<p>No follows! Make some friends</p>
+{% endif %}
+<br><br>
+<h2>Pending Followers</h2>
+{% if all_pending %}
+	<ol>
+	{% for pending in all_pending %}
+		<li><a href="/ideation/user/{{ pending.username }}">{{ pending.username }}</a></li>
+		<br>
+		<form action="/ideation/user/{{ pending.follows }}/approve/{{ pending.username }}/" method="post">
+		{% csrf_token %} 
+		<input type="submit" value="Approve"></form>
+		<form action="/ideation/user/{{ pending.follows }}/remove/{{ pending.username }}/" method="post">
+		{% csrf_token %} 
+		<input type="submit" value="Remove"></form>
+	{% endfor %}
+	</ol>
+{% else %}
+	<p>No pending requests.</p>
+{% endif %}
+
+<a href="/ideation/">Home</a>

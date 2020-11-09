@@ -1,0 +1,21 @@
+<h1>Manage Ideas</h1>
+
+{% if all_user_ideas %}
+	<ul>
+	{% for idea in all_user_ideas%}
+		<li><b>{{ idea.title }}</b>: {{ idea.text }} <br> 
+		privacy level: {{ idea.privacy}}<br>
+		<i>by {{ idea.username }} at {{ idea.create_time}}</i></li><br>
+		<form action="/ideation/user/{{ idea.username }}/update/{{ idea.id }}/" method="get">
+		{% csrf_token %} 
+		<input type="submit" value="Modify"></form>
+		<form action="/ideation/user/{{ idea.username }}/delete/{{ idea.id }}/" method="get">
+		{% csrf_token %} 
+		<input type="submit" value="Delete"></form>
+	{% endfor %}
+	</ul>
+{% else %}
+	<p>No ideas! Add one?</p>
+{% endif %}
+
+<a href="/ideation/">Home</a>

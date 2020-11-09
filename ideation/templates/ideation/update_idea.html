@@ -1,0 +1,14 @@
+<h1>Update Idea</h1>
+
+<b>{{ idea.title }}</b>: {{ idea.text }} <br> 
+privacy level: {{ idea.privacy}}<br>
+<form action="/ideation/user/{{ idea.username }}/update/{{ idea.id }}/" method="post">
+{% csrf_token %} 
+<input type="radio" name="privacy" id="public" value="public" checked=true>
+<label for="public">Public</label><br>
+<input type="radio" name="privacy" id="protected" value="protected">
+<label for="protected">Protected</label><br>
+<input type="radio" name="privacy" id="private" value="private">
+<label for="private">Private</label><br>
+<br>
+<input type="submit" value="Update"></form>

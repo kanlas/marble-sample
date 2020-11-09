@@ -1,0 +1,21 @@
+<h1>Create a new Idea</h1>
+
+<form action="{% url 'ideate' %}" method="post">
+{% csrf_token %} 
+<label for="title">Title</label>
+<input type="text" name="title" id="title">
+<br>
+<label for="idea">Idea</label>
+<input type="text" name="idea_text" id="idea_text">
+<br>
+
+<!-- add three options for privacy level -->
+<input type="radio" name="privacy" id="public" value="public" checked=true>
+<label for="public">Public</label><br>
+<input type="radio" name="privacy" id="protected" value="protected">
+<label for="protected">Protected</label><br>
+<input type="radio" name="privacy" id="private" value="private">
+<label for="private">Private</label><br>
+<br>
+<input type="submit" value="Post">
+</form>
