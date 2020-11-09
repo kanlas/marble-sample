@@ -1,23 +1,31 @@
-<h1>Ideation</h1>
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Ideation: timeline</title>
+	</head>
+	<body>
+		<h1>Ideation</h1>
+		{% if latest_idea_list %}
+			<ul>
+			{% for idea in latest_idea_list%}
+				<li><b>{{ idea.title }}</b>: {{ idea.text }} <br> 
+				<i>by <a href="/ideation/user/{{ idea.username }}">{{ idea.username }}</a> at {{ idea.create_time}}</i></li><br>
+			{% endfor %}
+			</ul>
+		{% else %}
+			<p>No ideas! Add one?</p>
+		{% endif %}
 
-{% if latest_idea_list %}
-	<ul>
-	{% for idea in latest_idea_list%}
-		<li><b>{{ idea.title }}</b>: {{ idea.text }} <br> 
-		<i>by <a href="/ideation/user/{{ idea.username }}">{{ idea.username }}</a> at {{ idea.create_time}}</i></li><br>
-	{% endfor %}
-	</ul>
-{% else %}
-	<p>No ideas! Add one?</p>
-{% endif %}
-
-{% if request.user.is_authenticated %}
-	<form action="./ideate"><input type="submit" value="Ideate" /></form>
-	<form action="/accounts/password_reset"><input type="submit" value="Reset Pasword" /></form>
-	<form action="/accounts/logout"><input type="submit" value="Logout" /></form>
-{% else %}
-	<form action="/accounts/login"><input type="submit" value="Login" /></form>
-	<form action="/accounts/signup"><input type="submit" value="Signup" /></form>
-{% endif %}
-<br>
-Logged in as: <a href="/ideation/user/{{ request.user.username }}">{{ request.user.username }}</a>
+		{% if request.user.is_authenticated %}
+			<form action="./ideate"><input type="submit" value="Ideate" /></form>
+			<form action="/accounts/password_reset"><input type="submit" value="Reset Pasword" /></form>
+			<form action="/accounts/logout"><input type="submit" value="Logout" /></form>
+		{% else %}
+			<form action="/accounts/login"><input type="submit" value="Login" /></form>
+			<form action="/accounts/signup"><input type="submit" value="Signup" /></form>
+		{% endif %}
+		<br>
+		Logged in as: <a href="/ideation/user/{{ request.user.username }}">{{ request.user.username }}</a>
+	</body>
+</html>

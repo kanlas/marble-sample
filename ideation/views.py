@@ -3,26 +3,25 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 
-from .common import getPrivacy
-from .models import Idea, Follower, PrivacyLevel
+from .common import getApprovedFollows, getApprovedFollowers, getPendingFollowers, getPrivacy, sortIdeas
+from .models import Idea, Following, PrivacyLevel
 
 # index: list of recent ideas that are public, from follows or from self
 def index(request):
     # get all public ideas
-    current_user = request.user.username
     latest_idea_list = Idea.objects.filter(privacy='public')
     
     # only do a check for private/protected posts if logged in
     if request.user.is_authenticated:
-        # add private self posts
+        current_user = request.user.username
+        # add private posts from current_user
         latest_idea_list = latest_idea_list | Idea.objects.filter(username=current_user)
         # add protected posts from follows
-        follows = Follower.objects.filter(username=current_user).exclude(pending=True).values_list('follows')
+        follows = getApprovedFollows(current_user).values_list('follows')
         latest_idea_list = latest_idea_list | Idea.objects.filter(username__in=follows, privacy='protected')
     
     # sort by create time and show most recent 10
-    latest_idea_list = latest_idea_list.order_by('-create_time')[:10]
-    context = {'latest_idea_list': latest_idea_list}
+    context = {'latest_idea_list': sortIdeas(latest_idea_list, 10)}
     return render(request, 'ideation/index.html', context)
 
 
@@ -43,45 +42,46 @@ def ideate(request):
     return render(request, 'ideation/ideate.html')
     
     
-# user: shows the username and list of ideas along with option to follow or unfollow
-def user(request, username):
+# user: see recent posts for target_user, follow/unfollow, or manage ideas and follows if self
+def user(request, user):
     current_user = request.user.username
-    existing_follow = Follower.objects.filter(username=current_user, follows=username)
+    target_user = user
+    existing_follow = Following.objects.filter(follower=current_user, follows=target_user)
 
     # process a follow/unfollow request, defined by the existence of a current relationship
     if request.method == 'POST':
         if existing_follow.exists():
             existing_follow.delete()
         else:
-            new_follow = Follower()
-            new_follow.username = current_user
-            new_follow.follows = username
+            new_follow = Following()
+            new_follow.follower = current_user
+            new_follow.follows = target_user
             new_follow.save()
         return HttpResponseRedirect(reverse('index'))
 
-    # get all of the ideas for the requested username
-    all_user_ideas = Idea.objects.filter(username=username)
+    # get all of the ideas for the requested target_user
+    all_user_ideas = Idea.objects.filter(username=target_user)
     
     # if looking at another user's profile, exclude private posts
-    if username != current_user:
+    if target_user != current_user:
         all_user_ideas = all_user_ideas.exclude(privacy=PrivacyLevel.PRIVATE)
         
-    # this has an arbitrary limit of 50 ideas just in case
-    all_user_ideas = all_user_ideas.order_by('-create_time')[:50]
-    is_following = existing_follow.exists()
-    context = {'username': username, 'all_user_ideas': all_user_ideas, 'is_following': is_following }
+    # ideas has an arbitrary limit of 50
+    context = { 'target_user' : target_user }
+    context['all_user_ideas'] = sortIdeas(all_user_ideas, 50)
+    context['is_following'] = existing_follow.exists()
     return render(request, 'ideation/user.html', context)
     
     
-# manage_ideas: used as a base page to then update privacy level or delete an idea
-def manage_ideas(request, username):
-    current_user = request.user.username
-    all_user_ideas = Idea.objects.filter(username=current_user).order_by('-create_time')
+# manage_ideas: used as a base page view ideas, update privacy level or delete an idea
+def manage_ideas(request, user):
+    all_user_ideas = Idea.objects.filter(username=user).order_by('-create_time')
     context = { 'all_user_ideas' : all_user_ideas }
     return render(request, 'ideation/manage_ideas.html', context)
  
  
-def update_idea(request, username, idea_id):
+# change the privacy level on a given idea
+def update_idea(request, user, idea_id):
     idea = Idea.objects.get(pk=idea_id)
     if request.method == 'POST':
         privacy = request.POST['privacy']
@@ -92,28 +92,32 @@ def update_idea(request, username, idea_id):
     return render(request, 'ideation/update_idea.html', context)
     
 
-def delete_idea(request, username, idea_id):
+# delete the given idea
+def delete_idea(request, user, idea_id):
     idea = Idea.objects.get(pk=idea_id)
     idea.delete()
     return HttpResponseRedirect(reverse('index')) 
         
 
-def manage_follows(request, username):
-    current_user = request.user.username
-    all_followers = Follower.objects.filter(follows=current_user).exclude(pending=True)
-    all_follows = Follower.objects.filter(username=current_user).exclude(pending=True)
-    all_pending = Follower.objects.filter(follows=current_user, pending=True)
-    context = { 'all_followers' : all_followers, 'all_follows' : all_follows, 'all_pending' : all_pending}
+# manage_follows: used as a base page to see all follows and followers and approve/deny
+def manage_follows(request, user):
+    context = dict()
+    context['all_followers'] = getApprovedFollowers(user)
+    context['all_follows'] = getApprovedFollows(user)
+    context['all_pending'] = getPendingFollowers(user)
     return render(request, 'ideation/manage_follows.html', context)
  
  
-def remove_follower(request, username, follower):
-    follow = Follower.objects.get(username=follower, follows=username)
+# remove a follower or deny a pending request
+def remove_follower(request, user, follower):
+    follow = Following.objects.get(follower=follower, follows=user)
     follow.delete()
-    return HttpResponseRedirect(reverse('follows', args=[username]))
+    return HttpResponseRedirect(reverse('follows', args=[user]))
+
     
-def approve_follower(request, username, follower):
-    follow = Follower.objects.get(username=follower, follows=username)
+# approve a pending follower   
+def approve_follower(request, user, follower):
+    follow = Following.objects.get(follower=follower, follows=user)
     follow.pending = False
     follow.save()
-    return HttpResponseRedirect(reverse('follows', args=[username]))
+    return HttpResponseRedirect(reverse('follows', args=[user]))

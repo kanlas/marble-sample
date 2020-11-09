@@ -1,30 +1,38 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Ideation: {{ target_user }}</title>
+	</head>
+	<body>
+		<h1>User: {{ target_user }}</h1>
 
-<h1>User: {{ username }}</h1>
+		{% if all_user_ideas %}
+			<ul>
+			{% for idea in all_user_ideas%}
+				<li><b>{{ idea.title }}</b>: {{ idea.text }} <br> 
+				<i>by {{ idea.username }} at {{ idea.create_time}}</i></li><br>
+			{% endfor %}
+			</ul>
+		{% else %}
+			<p>User has not posted any ideas yet.</p>
+		{% endif %}
 
-{% if all_user_ideas %}
-	<ul>
-	{% for idea in all_user_ideas%}
-		<li><b>{{ idea.title }}</b>: {{ idea.text }} <br> 
-		<i>by {{ idea.username }} at {{ idea.create_time}}</i></li><br>
-	{% endfor %}
-	</ul>
-{% else %}
-	<p>User has not posted any ideas yet.</p>
-{% endif %}
-
-<!-- three options: unfollow (if already following), follow, or management for own profile -->
-{% if is_following %}
-	<p><i>Following</i></p>
-	<form action="/ideation/user/{{ username }}/" method="post">
-	{% csrf_token %} 
-	<input type="submit" value="Unfollow"></form>
-{% elif username != request.user.username %}
-	<form action="/ideation/user/{{ username }}/" method="post">
-	{% csrf_token %} 
-	<input type="submit" value="Follow"></form>
-{% else %}
-	<form action="/ideation/user/{{ username }}/ideas/" method="get">
-	<input type="submit" value="Manage Ideas"></form>
-	<form action="/ideation/user/{{ username }}/follows/" method="get">
-	<input type="submit" value="Manage Follows"></form>
-{% endif %}
+		<!-- three options: unfollow (if already following), follow, or management for own profile -->
+		{% if is_following %}
+			<p><i>Following</i></p>
+			<form action="/ideation/user/{{ target_user }}/" method="post">
+			{% csrf_token %} 
+			<input type="submit" value="Unfollow"></form>
+		{% elif target_user != request.user.username %}
+			<form action="/ideation/user/{{ target_user }}/" method="post">
+			{% csrf_token %} 
+			<input type="submit" value="Follow"></form>
+		{% else %}
+			<form action="/ideation/user/{{ target_user }}/ideas/" method="get">
+			<input type="submit" value="Manage Ideas"></form>
+			<form action="/ideation/user/{{ target_user }}/follows/" method="get">
+			<input type="submit" value="Manage Follows"></form>
+		{% endif %}
+	</body>
+</html>

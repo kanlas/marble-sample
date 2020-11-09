@@ -1,4 +1,3 @@
-from django.contrib.auth.models import User as defaultUser
 from django.db import models
 
 class PrivacyLevel(models.TextChoices):
@@ -17,9 +16,9 @@ class Idea(models.Model):
         return self.title
 
 # Follower - a one-sided relationship between two users
-class Follower(models.Model):
-    username = models.TextField()
+class Following(models.Model):
+    follower = models.TextField()
     follows = models.TextField()
     pending = models.BooleanField(default=True)
     def __str__(self):
-        return self.username + ":" + self.follows
+        return self.follower + ":" + self.follows
